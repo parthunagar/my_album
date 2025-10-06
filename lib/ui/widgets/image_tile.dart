@@ -7,10 +7,6 @@ import 'package:monirth_memories/ui/model/photo_model.dart';
 import 'package:monirth_memories/ui/views/full_image/full_image_view.dart';
 import 'package:monirth_memories/ui/widgets/shimmer_pkg.dart';
 
-import 'package:flutter/material.dart';
-import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
-import '../widgets/image_tile.dart';
-
 class PhotoGrid extends StatelessWidget {
   final ScrollController? controller;
   final List<dynamic> photos;
