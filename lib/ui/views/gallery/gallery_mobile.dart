@@ -6,6 +6,7 @@ class _GalleryMobile extends ViewModelWidget<GalleryViewModel> {
   @override
   Widget build(BuildContext context, GalleryViewModel vm) {
     return Scaffold(
+      backgroundColor: Colors.grey[50],
       appBar: CustomAppBar(
         title: 'Gallery',
         actions: [
@@ -15,19 +16,25 @@ class _GalleryMobile extends ViewModelWidget<GalleryViewModel> {
               await Navigator.push(
                 context,
                 MaterialPageRoute(
-                  builder: (_) => FavoritesView(
-                    favoritesService: vm.fav,
-                    useThumbAssets: false,
-                  ),
+                  builder: (_) => const FavoritesView(
+                      // favoritesService: vm.fav,
+                      // useThumbAssets: false,
+                      ),
                 ),
               );
               vm.notifyListeners();
             },
-          )
+          ),
         ],
       ),
+
+      // ------------------- Body -------------------
       body: vm.allPhotos.isEmpty
-          ? const Center(child: CircularProgressIndicator())
+          // ? const Center(child: CircularProgressIndicator())
+          ? const PhotoGrid(
+              photos: ["", "", "", "", "", "", "", "", "", "", "", ""],
+              useShimmer: true,
+            )
           : RefreshIndicator(
               onRefresh: () async {
                 vm.currentPage = 0;
@@ -35,102 +42,37 @@ class _GalleryMobile extends ViewModelWidget<GalleryViewModel> {
                 vm.allLoaded = false;
                 await vm.fetchPhotos();
               },
-              child: GridView.builder(
+              // child: MasonryGridView.builder(
+              //   controller: vm.scrollController,
+              //   padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+              //   gridDelegate: const SliverSimpleGridDelegateWithFixedCrossAxisCount(crossAxisCount: 3),
+              //   mainAxisSpacing: 6,
+              //   crossAxisSpacing: 6,
+              //   itemCount: vm.visiblePhotos.length + (vm.isLoading ? 6 : 0),
+              //   itemBuilder: (context, index) {
+              //     if (index >= vm.visiblePhotos.length) {
+              //       return buildShimmerTile();
+              //     }
+
+              //     final photo = vm.visiblePhotos[index];
+              //     final thumbUrl = thumbnailUrl(photo.url);
+
+              //     return ImageTile(
+              //         i: index, photo: photo.url, thumbnail: thumbUrl);
+              //   },
+              // ),
+              child: PhotoGrid(
                 controller: vm.scrollController,
-                padding: const EdgeInsets.all(4),
-                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: 3,
-                  mainAxisSpacing: 4,
-                  crossAxisSpacing: 4,
-                ),
-                itemCount: vm.visiblePhotos.length + (vm.isLoading ? 3 : 0),
-                itemBuilder: (context, index) {
-                  if (index >= vm.visiblePhotos.length) {
-                    return _buildShimmer();
-                  }
-                  final photo = vm.visiblePhotos[index];
-                  final thumbUrl =
-                      "https://images.weserv.nl/?url=${Uri.encodeComponent(photo.url)}&w=200&h=200&fit=cover";
-                  return GestureDetector(
-                    onTap: () async {
-                      await Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => FullImageView(
-                            id: index,
-                            fullImagePath: photo.url,
-                            isAsset: false,
-                            favoritesService: vm.fav,
-                          ),
-                        ),
-                      );
-                      vm.notifyListeners();
-                    },
-                    child: GridTile(
-                      footer: GridTileBar(
-                        backgroundColor: Colors.black26,
-                        leading: FutureBuilder<bool>(
-                          future: vm.fav.contains(photo.url),
-                          builder: (context, snap) {
-                            final isFav = snap.data ?? false;
-                            return IconButton(
-                              icon: Icon(isFav
-                                  ? Icons.favorite
-                                  : Icons.favorite_border),
-                              onPressed: () async {
-                                if (isFav) {
-                                  await vm.fav.remove(photo.url);
-                                } else {
-                                  await vm.fav.add(photo.url);
-                                }
-                                vm.notifyListeners();
-                              },
-                            );
-                          },
-                        ),
-                        title: Text('${index + 1}'),
-                      ),
-                      child: Hero(
-                        tag: photo.url,
-                        child: ClipRRect(
-                          borderRadius: BorderRadius.circular(6),
-                          child: CachedNetworkImage(
-                            // cacheManager: CustomCacheManager.instance,
-                            imageUrl: thumbUrl, //photo.url,
-                            placeholder: (c, s) => _buildShimmer(),
-                            errorWidget: (c, s, e) =>
-                                const Icon(Icons.broken_image),
-                            fadeInDuration: const Duration(milliseconds: 300),
-                            fadeOutDuration: const Duration(milliseconds: 100),
-                            fit: BoxFit.cover,
-                            memCacheHeight: 200,
-                            memCacheWidth: 200,
-                            maxWidthDiskCache: 200,
-                            maxHeightDiskCache: 200,
-                          ),
-                        ),
-                      ),
-                    ),
-                  );
-                },
+                photos: vm.visiblePhotos,
+                isLoading: vm.isLoading,
+                useShimmer: true,
+                usePhotoObject: true, // because vm.visiblePhotos has .url
               ),
             ),
     );
   }
-
-  Widget _buildShimmer() {
-    return Shimmer.fromColors(
-      baseColor: Colors.grey[300]!,
-      highlightColor: Colors.grey[100]!,
-      child: Container(
-        decoration: BoxDecoration(
-          color: Colors.grey[300],
-          borderRadius: BorderRadius.circular(8),
-        ),
-      ),
-    );
-  }
 }
+
 
 
 ///

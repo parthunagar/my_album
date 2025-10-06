@@ -1,13 +1,7 @@
 part of favorites_view;
 
 class _FavoritesMobile extends ViewModelWidget<FavoritesViewModel> {
-  final FavoritesService favoritesService;
-  final bool useThumbAssets;
-
-  const _FavoritesMobile({
-    required this.favoritesService,
-    required this.useThumbAssets,
-  });
+  const _FavoritesMobile();
 
   @override
   Widget build(BuildContext context, FavoritesViewModel vm) {
@@ -17,49 +11,37 @@ class _FavoritesMobile extends ViewModelWidget<FavoritesViewModel> {
         future: vm.favsFuture,
         builder: (context, snapshot) {
           if (!snapshot.hasData) {
-            return const Center(child: CircularProgressIndicator());
+            // return const Center(child: CircularProgressIndicator());
+            return const PhotoGrid(
+              photos: ["", "", "", "", "", "", "", "", "", "", "", ""],
+              useShimmer: true,
+            );
           }
 
           final favorites = snapshot.data!;
           if (favorites.isEmpty) {
-            return const Center(child: Text('No favorites yet.'));
+            return const Center(
+              child: Text(
+                'No favorites yet ❤️',
+                style: TextStyle(fontSize: 16, color: Colors.black54),
+              ),
+            );
           }
-
-          return GridView.builder(
-            padding: const EdgeInsets.all(4),
-            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: 3,
-              crossAxisSpacing: 4,
-              mainAxisSpacing: 4,
-            ),
-            itemCount: favorites.length,
-            itemBuilder: (context, i) {
-              final imgPath = favorites[i];
-              return GestureDetector(
-                onTap: () async {
-                  // final favorites = await fav.getAll();
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) => FullImageView(
-                        fullImagePath: imgPath,
-                        isAsset: useThumbAssets,
-                        id: i,
-                        favoritesService: vm.fav, // favorites,
-                      ),
-                    ),
-                  );
-                },
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(6),
-                  child: useThumbAssets
-                      ? Image.asset(imgPath,
-                          fit: BoxFit.cover, cacheWidth: 300, cacheHeight: 300)
-                      : Image.network(imgPath, fit: BoxFit.cover),
-                ),
-              );
-            },
-          );
+          // return MasonryGridView.builder(
+          //   padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+          //   gridDelegate: const SliverSimpleGridDelegateWithFixedCrossAxisCount(
+          //     crossAxisCount: 3,
+          //   ),
+          //   mainAxisSpacing: 6,
+          //   crossAxisSpacing: 6,
+          //   itemCount: favorites.length,
+          //   itemBuilder: (context, i) {
+          //     final photo = favorites[i];
+          //     final thumbUrl = thumbnailUrl(photo);
+          //     return ImageTile(i: i, photo: photo, thumbnail: thumbUrl);
+          //   },
+          // );
+          return PhotoGrid(photos: favorites, usePhotoObject: false);
         },
       ),
     );

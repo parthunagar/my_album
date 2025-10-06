@@ -9,7 +9,6 @@ import 'package:responsive_builder/responsive_builder.dart';
 import 'package:stacked/stacked.dart';
 import 'package:flutter/material.dart';
 import 'home_view_model.dart';
-import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:flutter/foundation.dart'; // for compute()
 import 'package:cached_network_image/cached_network_image.dart';

@@ -15,10 +15,9 @@ class _FullImageMobile extends ViewModelWidget<FullImageViewModel> {
 
   @override
   Widget build(BuildContext context, FullImageViewModel vm) {
-    // FullImageViewModel vm = widget.viewModel;
     return Scaffold(
       appBar: AppBar(
-        title: Text('Image ${id + 1}'),
+        title: Text('Day ${id + 1}'),
         actions: [
           IconButton(
             icon: const Icon(Icons.download),
@@ -43,34 +42,99 @@ class _FullImageMobile extends ViewModelWidget<FullImageViewModel> {
           ),
         ],
       ),
-      body: vm.loading
-          ? const Center(child: CircularProgressIndicator())
-          : Center(
-              child: isAsset && vm.imageData != null
-                  ? Hero(
-                      tag: vm.imageData!,
-                      child: PhotoView(
-                        imageProvider: MemoryImage(vm.imageData!),
-                        // imageProvider: AssetImage(
-                        //   widget.fullImagePath,
-                        //   bundle: rootBundle,
-                        //   cacheWidth: 1080, // decode only up to screen width
-                        // ),
-                        enablePanAlways: true,
-                        minScale: PhotoViewComputedScale.contained,
-                        maxScale: PhotoViewComputedScale.covered * 3.0,
-                      ),
-                    )
-                  : Hero(
-                      tag: fullImagePath,
-                      child: PhotoView(
-                        imageProvider: NetworkImage(fullImagePath),
-                        enablePanAlways: true,
-                        minScale: PhotoViewComputedScale.contained,
-                        maxScale: PhotoViewComputedScale.covered * 3.0,
+      // body: vm.loading
+      //     ? const Center(child: CircularProgressIndicator())
+      //     : Hero(
+      //         tag: fullImagePath, // vm.imageData!,
+      //         child: PhotoView(
+      //           imageProvider: isAsset && vm.imageData != null
+      //               ? MemoryImage(vm.imageData!) as ImageProvider<Object>
+      //               : CachedNetworkImageProvider(fullImagePath),
+      //           enablePanAlways: true,
+      //           minScale: PhotoViewComputedScale.contained,
+      //           maxScale: PhotoViewComputedScale.covered * 3.0,
+      //           loadingBuilder: (context, event) => const Center(
+      //             child: CircularProgressIndicator(),
+      //           ),
+      //         ),
+      //       ),
+      body: Hero(
+        tag: fullImagePath,
+        child: Stack(
+          fit: StackFit.expand,
+          children: [
+            /*
+            if (!isAsset)
+              CachedNetworkImage(
+                imageUrl: fullImagePath,
+                fit: BoxFit.cover,
+                color: Colors.black.withValues(alpha: 0.5),
+                colorBlendMode: BlendMode.darken,
+                imageBuilder: (context, imageProvider) {
+                  return ImageFiltered(
+                    imageFilter: ImageFilter.blur(sigmaX: 15, sigmaY: 15),
+                    child: DecoratedBox(
+                      decoration: BoxDecoration(
+                        image: DecorationImage(
+                            image: imageProvider, fit: BoxFit.cover),
                       ),
                     ),
+                  );
+                },
+              ), */
+
+            // ✅ Main interactive image view
+            PhotoView(
+              backgroundDecoration:
+                  const BoxDecoration(color: Colors.transparent),
+              imageProvider: isAsset && vm.imageData != null
+                  ? MemoryImage(vm.imageData!) as ImageProvider<Object>
+                  : CachedNetworkImageProvider(fullImagePath),
+              enablePanAlways: true,
+              minScale: PhotoViewComputedScale.contained,
+              maxScale: PhotoViewComputedScale.covered * 3,
+              loadingBuilder: (context, event) {
+                return const Center(
+                  child: _SmoothImagePlaceholder(),
+                );
+              },
             ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _SmoothImagePlaceholder extends StatelessWidget {
+  const _SmoothImagePlaceholder();
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Container(
+        width: 80,
+        height: 80,
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(20),
+          gradient: LinearGradient(
+            colors: [
+              Colors.grey.shade800,
+              Colors.grey.shade700,
+              Colors.grey.shade800,
+            ],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+        ),
+        child: const Padding(
+          padding: EdgeInsets.all(20),
+          child: CircularProgressIndicator(
+            strokeWidth: 2,
+            color: Colors.white70,
+          ),
+        ),
+      ),
     );
   }
 }

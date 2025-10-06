@@ -1,5 +1,8 @@
 library full_image_view;
 
+import 'dart:ui';
+
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:monirth_memories/core/services/favorites_service.dart';
 import 'package:monirth_memories/ui/views/full_image/full_image_view_model.dart';

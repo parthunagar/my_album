@@ -22,20 +22,28 @@ class _HomeMobile extends StatelessWidget {
                   "https://raw.githubusercontent.com/parthunagar/my_album/main/assets/images/pre_wedding_album_pic/album/album1.jpg",
               onTap: () {
                 Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                        builder: (context) => const GalleryView()));
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const GalleryView(
+                      jsonUrl:
+                          "https://raw.githubusercontent.com/parthunagar/my_album/main/assets/pre_wedding_album.json",
+                    ),
+                  ),
+                );
               },
             ),
             AlbumThumbnailCard(
               title: "Pre-Wedding Days",
               imageUrl:
-                  "https://raw.githubusercontent.com/parthunagar/my_album/main/assets/images/pre_wedding_album_pic/album/album1.jpg",
+                  "https://raw.githubusercontent.com/parthunagar/my_album/main/assets/images/pre_wedding_album_pic/days/day2.jpg",
               onTap: () {
                 Navigator.push(
                     context,
                     MaterialPageRoute(
-                        builder: (context) => const PaginatedGallery()));
+                        builder: (context) => const GalleryView(
+                              jsonUrl:
+                                  "https://raw.githubusercontent.com/parthunagar/my_album/main/assets/pre_wedding_days.json",
+                            )));
               },
             ),
             ElevatedButton(

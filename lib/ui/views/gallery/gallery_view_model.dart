@@ -1,5 +1,3 @@
-import 'dart:convert';
-
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:monirth_memories/ui/model/photo_model.dart';
@@ -8,6 +6,8 @@ import 'package:http/http.dart' as http;
 import 'package:monirth_memories/core/services/favorites_service.dart';
 
 class GalleryViewModel extends BaseViewModel {
+  final String jsonUrl;
+  GalleryViewModel(this.jsonUrl);
   final FavoritesService fav = FavoritesService();
 
   List<PhotoModel> allPhotos = [];
@@ -22,26 +22,25 @@ class GalleryViewModel extends BaseViewModel {
 
     // 🔁 Infinite scroll listener
     scrollController.addListener(() {
-      if (scrollController.position.pixels >=
-              scrollController.position.maxScrollExtent - 300 &&
-          !isLoading &&
-          !allLoaded) {
+      final maxScroll = scrollController.position.maxScrollExtent;
+      final current = scrollController.position.pixels;
+      if (current >= maxScroll - 300 && !isLoading && !allLoaded) {
         loadMore();
       }
     });
   }
 
   Future<void> fetchPhotos() async {
-    const url =
-        "https://raw.githubusercontent.com/parthunagar/my_album/main/assets/pre_wedding_album.json";
-
     try {
-      final response = await http.get(Uri.parse(url));
+      final response = await http.get(Uri.parse(jsonUrl));
       if (response.statusCode == 200) {
         final parsed = await compute(parsePhotos, response.body);
         allPhotos = parsed;
+        visiblePhotos.clear();
+        currentPage = 0;
+        allLoaded = false;
         notifyListeners();
-        loadMore(); // load first batch
+        loadMore();
       } else {
         debugPrint("Error: ${response.statusCode} || ${response.body}");
       }
@@ -56,27 +55,25 @@ class GalleryViewModel extends BaseViewModel {
     isLoading = true;
     notifyListeners();
 
-    Future.delayed(const Duration(milliseconds: 300), () {
-      final start = currentPage * pageSize;
-      final end = start + pageSize;
+    // Future.delayed(const Duration(milliseconds: 300), () {
+    final start = currentPage * pageSize;
+    // final end = start + pageSize;
+    final end = (start + pageSize).clamp(0, allPhotos.length);
 
-      if (start >= allPhotos.length) {
-        allLoaded = true;
-        isLoading = false;
-
-        notifyListeners();
-        return;
-      }
-
-      visiblePhotos.addAll(allPhotos.sublist(
-        start,
-        end > allPhotos.length ? allPhotos.length : end,
-      ));
-      currentPage++;
+    if (start >= allPhotos.length) {
+      allLoaded = true;
       isLoading = false;
-
       notifyListeners();
-    });
+      return;
+    }
+
+    // visiblePhotos.addAll(allPhotos.sublist(start,end > allPhotos.length ? allPhotos.length : end));
+    visiblePhotos.addAll(allPhotos.sublist(start, end));
+    currentPage++;
+    isLoading = false;
+
+    notifyListeners();
+    // });
     print('visiblePhotos.length : ${visiblePhotos.length}');
   }
 
