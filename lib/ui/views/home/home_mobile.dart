@@ -10,29 +10,251 @@ class _HomeMobile extends StatelessWidget {
     // var h = MediaQuery.of(context).size.height;
     return Scaffold(
       appBar: CustomAppBar(title: 'Home'),
-      body: Column(
-        mainAxisSize: MainAxisSize.max,
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          ElevatedButton(
-              onPressed: () {
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+        child: Column(
+          mainAxisSize: MainAxisSize.max,
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            AlbumThumbnailCard(
+              title: "Pre-Wedding Album",
+              imageUrl:
+                  "https://raw.githubusercontent.com/parthunagar/my_album/main/assets/images/pre_wedding_album_pic/album/album1.jpg",
+              onTap: () {
                 Navigator.push(
                     context,
                     MaterialPageRoute(
                         builder: (context) => const GalleryView()));
               },
-              child: const Text('Gallary Page')),
-          ElevatedButton(
-              onPressed: () {
-                // Navigator.push(context,
-                //     MaterialPageRoute(builder: (context) => GalleryPage()));
+            ),
+            AlbumThumbnailCard(
+              title: "Pre-Wedding Days",
+              imageUrl:
+                  "https://raw.githubusercontent.com/parthunagar/my_album/main/assets/images/pre_wedding_album_pic/album/album1.jpg",
+              onTap: () {
+                Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                        builder: (context) => const PaginatedGallery()));
               },
-              child: const Text('Gallary Page')),
-        ],
+            ),
+            ElevatedButton(
+                onPressed: () {
+                  Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (context) => const PaginatedGallery()));
+                },
+                child: const Text('Gallary Page')),
+          ],
+        ),
       ),
     );
   }
 }
+
+class PaginatedGallery extends StatefulWidget {
+  const PaginatedGallery({super.key});
+
+  @override
+  State<PaginatedGallery> createState() => _PaginatedGalleryState();
+}
+
+class _PaginatedGalleryState extends State<PaginatedGallery> {
+  List<PhotoModel> allPhotos = [];
+  List<PhotoModel> visiblePhotos = [];
+  int currentPage = 0;
+  final int pageSize = 20;
+  bool isLoading = false;
+  bool allLoaded = false;
+  final ScrollController _scrollController = ScrollController();
+
+  Future<void> fetchPhotos() async {
+    const url =
+        "https://raw.githubusercontent.com/parthunagar/my_album/main/assets/pre_wedding_album.json";
+
+    try {
+      final response = await http.get(Uri.parse(url));
+      if (response.statusCode == 200) {
+        final parsed = await compute(parsePhotos, response.body);
+        setState(() {
+          allPhotos = parsed;
+        });
+        loadMore(); // load first batch
+      } else {
+        debugPrint("Error: ${response.statusCode} || ${response.body}");
+      }
+    } catch (e) {
+      debugPrint("Error fetching photos: $e");
+    }
+  }
+
+  void loadMore() {
+    if (isLoading || allLoaded) return;
+
+    setState(() => isLoading = true);
+
+    Future.delayed(const Duration(milliseconds: 300), () {
+      final start = currentPage * pageSize;
+      final end = start + pageSize;
+
+      if (start >= allPhotos.length) {
+        setState(() {
+          allLoaded = true;
+          isLoading = false;
+        });
+        return;
+      }
+
+      setState(() {
+        visiblePhotos.addAll(allPhotos.sublist(
+          start,
+          end > allPhotos.length ? allPhotos.length : end,
+        ));
+        currentPage++;
+        isLoading = false;
+      });
+    });
+    print('visiblePhotos.length : ${visiblePhotos.length}');
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    fetchPhotos();
+
+    // 🔁 Infinite scroll listener
+    _scrollController.addListener(() {
+      if (_scrollController.position.pixels >=
+              _scrollController.position.maxScrollExtent - 300 &&
+          !isLoading &&
+          !allLoaded) {
+        loadMore();
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: const Text("Smooth Lazy Gallery")),
+      body: allPhotos.isEmpty
+          ? const Center(child: CircularProgressIndicator())
+          : RefreshIndicator(
+              onRefresh: () async {
+                currentPage = 0;
+                visiblePhotos.clear();
+                allLoaded = false;
+                await fetchPhotos();
+              },
+              child: GridView.builder(
+                controller: _scrollController,
+                padding: const EdgeInsets.all(4),
+                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: 3,
+                  mainAxisSpacing: 4,
+                  crossAxisSpacing: 4,
+                ),
+                itemCount: visiblePhotos.length + (isLoading ? 3 : 0),
+                itemBuilder: (context, index) {
+                  if (index >= visiblePhotos.length) {
+                    return _buildShimmer();
+                  }
+
+                  // final imageUrl = visiblePhotos[index];
+                  final photo = visiblePhotos[index];
+                  return GestureDetector(
+                    onTap: () {
+                      // Navigator.push(
+                      //   context,
+                      //   MaterialPageRoute(
+                      //     builder: (_) => FullImageView(url: imageUrl),
+                      //   ),
+                      // );
+                    },
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(8),
+                      child: CachedNetworkImage(
+                        imageUrl: photo.url,
+                        placeholder: (c, s) => _buildShimmer(),
+                        errorWidget: (c, s, e) =>
+                            const Icon(Icons.broken_image),
+                        fit: BoxFit.cover,
+                        memCacheHeight: 300,
+                        memCacheWidth: 300,
+                        maxWidthDiskCache: 100,
+                        maxHeightDiskCache: 100,
+                      ),
+                    ),
+                  );
+                },
+              ),
+            ),
+    );
+    // return Scaffold(
+    //   appBar: AppBar(title: const Text("Paginated Gallery")),
+    //   body: allPhotos.isEmpty
+    //       ? const Center(child: CircularProgressIndicator())
+    //       : NotificationListener<ScrollNotification>(
+    //           onNotification: (scrollInfo) {
+    //             if (!isLoading &&
+    //                 scrollInfo.metrics.pixels ==
+    //                     scrollInfo.metrics.maxScrollExtent) {
+    //               loadMore();
+    //             }
+    //             return false;
+    //           },
+    //           child: GridView.builder(
+    //             controller: _scrollController,
+    //             gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+    //               crossAxisCount: 3,
+    //               crossAxisSpacing: 4,
+    //               mainAxisSpacing: 4,
+    //             ),
+    //             itemCount: visiblePhotos.length + (isLoading ? 1 : 0),
+    //             itemBuilder: (context, index) {
+    //               if (index >= visiblePhotos.length) {
+    //                 return _buildShimmer();
+    //               }
+    //               final photo = visiblePhotos[index];
+    //               return CachedNetworkImage(
+    //                 imageUrl: photo['url'],
+    //                 // placeholder: (ctx, _) => const Center(child: CircularProgressIndicator(strokeWidth: 2)),
+    //                 placeholder: (context, url) => _buildShimmer(),
+    //                 errorWidget: (ctx, _, __) =>
+    //                     const Icon(Icons.error, color: Colors.red),
+    //                 fit: BoxFit.cover,
+    //                 memCacheHeight: 300,
+    //                 memCacheWidth: 300,
+    //                 maxWidthDiskCache: 100,
+    //                 maxHeightDiskCache: 100,
+    //               );
+    //             },
+    //           ),
+    //         ),
+    // );
+  }
+
+  Widget _buildShimmer() {
+    return Shimmer.fromColors(
+      baseColor: Colors.grey[300]!,
+      highlightColor: Colors.grey[100]!,
+      child: Container(
+        decoration: BoxDecoration(
+          color: Colors.grey[300],
+          borderRadius: BorderRadius.circular(8),
+        ),
+      ),
+    );
+  }
+}
+
 
 /*
 class GalleryPage extends StatefulWidget {

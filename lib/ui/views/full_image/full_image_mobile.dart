@@ -47,22 +47,28 @@ class _FullImageMobile extends ViewModelWidget<FullImageViewModel> {
           ? const Center(child: CircularProgressIndicator())
           : Center(
               child: isAsset && vm.imageData != null
-                  ? PhotoView(
-                      imageProvider: MemoryImage(vm.imageData!),
-                      // imageProvider: AssetImage(
-                      //   widget.fullImagePath,
-                      //   bundle: rootBundle,
-                      //   cacheWidth: 1080, // decode only up to screen width
-                      // ),
-                      enablePanAlways: true,
-                      minScale: PhotoViewComputedScale.contained,
-                      maxScale: PhotoViewComputedScale.covered * 3.0,
+                  ? Hero(
+                      tag: vm.imageData!,
+                      child: PhotoView(
+                        imageProvider: MemoryImage(vm.imageData!),
+                        // imageProvider: AssetImage(
+                        //   widget.fullImagePath,
+                        //   bundle: rootBundle,
+                        //   cacheWidth: 1080, // decode only up to screen width
+                        // ),
+                        enablePanAlways: true,
+                        minScale: PhotoViewComputedScale.contained,
+                        maxScale: PhotoViewComputedScale.covered * 3.0,
+                      ),
                     )
-                  : PhotoView(
-                      imageProvider: NetworkImage(fullImagePath),
-                      enablePanAlways: true,
-                      minScale: PhotoViewComputedScale.contained,
-                      maxScale: PhotoViewComputedScale.covered * 3.0,
+                  : Hero(
+                      tag: fullImagePath,
+                      child: PhotoView(
+                        imageProvider: NetworkImage(fullImagePath),
+                        enablePanAlways: true,
+                        minScale: PhotoViewComputedScale.contained,
+                        maxScale: PhotoViewComputedScale.covered * 3.0,
+                      ),
                     ),
             ),
     );
