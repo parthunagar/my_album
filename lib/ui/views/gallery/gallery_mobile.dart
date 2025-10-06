@@ -38,7 +38,6 @@ class _GalleryMobile extends ViewModelWidget<GalleryViewModel> {
         itemBuilder: (context, index) {
           final thumb = vm.thumbPath(index);
           final full = vm.fullPath(index);
-
           return GestureDetector(
             onTap: () async {
               await Navigator.push(
@@ -96,8 +95,8 @@ class _GalleryMobile extends ViewModelWidget<GalleryViewModel> {
                             const Icon(Icons.broken_image),
                         fit: BoxFit.cover,
                         // memCacheWidth: ,
-                        memCacheHeight: 100,
-                        memCacheWidth: 100,
+                        // memCacheHeight: 100,
+                        // memCacheWidth: 100,
                         maxWidthDiskCache: 100,
                         maxHeightDiskCache: 100,
                       ),

@@ -16,33 +16,25 @@ class GalleryViewModel extends BaseViewModel {
   }
 
   String thumbPath(int index) {
-    // final id = (index + 1).toString().padLeft(4, '0');
     final id = (index + 1);
-    if (id == 19) {
-      return 'assets/images/pre_wedding_album_pic/album/album$id.JPG';
-    }
+    // if (id == 19) {
+    //   return 'assets/images/pre_wedding_album_pic/album/album$id.JPG';
+    // }
     return 'assets/images/pre_wedding_album_pic/album/album$id.jpg';
   }
 
   String fullPath(int index) {
-    // final id = (index + 1).toString().padLeft(4, '0');
     final id = (index + 1);
-
     if (useThumbAssets) {
       if (id == 19) {
         return 'assets/images/pre_wedding_album_pic/album/album$id.JPG';
       }
       return 'assets/images/pre_wedding_album_pic/album/album$id.jpg';
     } else {
-      // Example remote full image url (replace with your CDN)
-      // String url = "https://github.com/parthunagar/monirth_memories/blob/main/assets/images/pre_wedding_album_pic/album/album";
       String url =
           "https://raw.githubusercontent.com/parthunagar/my_album/main/assets/images/pre_wedding_album_pic/album/album";
 
-      if (id == 19) {
-        // return '$url$id.JPG?raw=true';
-        return '$url$id.JPG';
-      }
+      // return id == 19 ? '$url$id.JPG' : '$url$id.jpg';
       return '$url$id.jpg';
     }
   }

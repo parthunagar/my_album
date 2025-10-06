@@ -46,7 +46,7 @@ class _SplashScreenMobileState extends State<_SplashScreenMobile> {
           color: AppColor.gray01,
           child: Image(
             fit: BoxFit.cover,
-            image: AssetImage(AppString.loginBackgroundImage),
+            image: AssetImage(loginBackgroundImage),
           ),
         ),
         onFinish: (context) {
