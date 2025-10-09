@@ -5,10 +5,9 @@ class _SplashScreenTablet extends StatelessWidget {
   const _SplashScreenTablet(this.viewModel);
   @override
   Widget build(BuildContext context) {
-    return const Scaffold(
-      body: Center(
-        child: Text('SplashScreenTablet'),
-      ),
+    return ParentView(
+      title: 'SplashScreenTablet',
+      body: const SizedBox.shrink(),
     );
   }
 }

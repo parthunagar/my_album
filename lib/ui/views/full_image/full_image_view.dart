@@ -4,6 +4,8 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:monirth_memories/core/services/favorites_service.dart';
 import 'package:monirth_memories/ui/views/full_image/full_image_view_model.dart';
+import 'package:monirth_memories/ui/widgets/custom_app_bar.dart';
+import 'package:monirth_memories/ui/widgets/progress_bar.dart';
 import 'package:photo_view/photo_view.dart';
 import 'package:responsive_builder/responsive_builder.dart';
 import 'package:stacked/stacked.dart';
@@ -14,7 +16,7 @@ class FullImageView extends StatelessWidget {
   final int id;
   final String fullImagePath;
   final bool isAsset;
-  final FavoritesService favoritesService;
+  final PreferenceService favoritesService;
   const FullImageView({
     super.key,
     required this.id,

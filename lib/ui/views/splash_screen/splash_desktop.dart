@@ -5,10 +5,9 @@ class _SplashScreenDesktop extends StatelessWidget {
   const _SplashScreenDesktop(this.viewModel);
   @override
   Widget build(BuildContext context) {
-    return const Scaffold(
-      body: Center(
-        child: Text('SplashScreenDesktop'),
-      ),
+    return ParentView(
+      title: 'SplashScreenDesktop',
+      body: const SizedBox.shrink(),
     );
   }
 }

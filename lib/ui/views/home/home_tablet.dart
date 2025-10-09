@@ -5,12 +5,9 @@ class _HomeTablet extends StatelessWidget {
   const _HomeTablet(this.viewModel);
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Tablet'),
-        backgroundColor: Colors.indigo,
-      ),
-      body: const Center(),
+    return ParentView(
+      title: 'Tablet',
+      body: const SizedBox.shrink(),
     );
   }
 }

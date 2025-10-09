@@ -2,8 +2,8 @@ library splash_screen_view;
 
 import 'package:auto_route/auto_route.dart';
 import 'package:flame_splash_screen/flame_splash_screen.dart';
-import 'package:monirth_memories/ui/gallary_app_demo/core/style/app_color.dart';
 import 'package:monirth_memories/ui/gallary_app_demo/core/utils/app_string.dart';
+import 'package:monirth_memories/ui/widgets/custom_app_bar.dart';
 import 'package:responsive_builder/responsive_builder.dart';
 
 import 'package:stacked/stacked.dart';

@@ -1,5 +1,6 @@
 import 'package:logger/logger.dart';
 import 'package:monirth_memories/core/logger.dart';
+import 'package:monirth_memories/utils/globals.dart';
 import 'package:stacked/stacked.dart';
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
@@ -14,6 +15,7 @@ class FullImageViewModel extends BaseViewModel {
 
   final Logger log = getLogger('FullImageViewModel');
   Future<void> init() async {
+    log.i('fullImagePath : $fullImagePath');
     _load();
   }
 
@@ -21,19 +23,16 @@ class FullImageViewModel extends BaseViewModel {
   bool loading = true;
 
   Future<void> _load() async {
-    // setState(() => );
     loading = true;
     notifyListeners();
     try {
       log.i('widget.isAsset : $isAsset');
       if (isAsset) {
-        // Load asset bytes but avoid decoding into full-size Image widget memory until displayed
         log.i('widget.fullImagePath : $fullImagePath');
         final bytes = await rootBundle.load(fullImagePath);
         imageData = bytes.buffer.asUint8List();
       } else {
-        // If remote, let PhotoViewImage handle caching via CachedNetworkImage in other approaches.
-        imageData = null; // indicating network usage
+        imageData = null;
       }
     } catch (e) {
       imageData = null;
@@ -61,7 +60,6 @@ class FullImageViewModel extends BaseViewModel {
   }
 
   void _showSnack(String msg) {
-    // if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
+    snackBar(context, msg);
   }
 }

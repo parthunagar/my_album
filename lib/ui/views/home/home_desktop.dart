@@ -5,11 +5,9 @@ class _HomeDesktop extends StatelessWidget {
   const _HomeDesktop(this.viewModel);
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Desktop'),
-        backgroundColor: Colors.amber,
-      ),
+    return ParentView(
+      title: 'Desktop',
+      body: const SizedBox.shrink(),
     );
   }
 }
