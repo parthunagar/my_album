@@ -145,10 +145,7 @@ class _MyPlayerState extends State<MyPlayer> {
   @override
   Widget build(BuildContext context) {
     if (!_videoController.value.isInitialized) {
-      return ParentView(
-        title: '',
-        body: const SmoothImagePlaceholder(),
-      );
+      return ParentView(body: const SmoothImagePlaceholder());
     }
 
     final currentPosition = _videoController.value.position;
@@ -157,7 +154,6 @@ class _MyPlayerState extends State<MyPlayer> {
     return PIPView(
       builder: (context, isFloating) {
         return ParentView(
-          title: '',
           body: GestureDetector(
             onTap: _toggleControls,
             onDoubleTapDown: (details) {

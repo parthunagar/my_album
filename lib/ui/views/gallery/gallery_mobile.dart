@@ -11,21 +11,17 @@ class _GalleryMobile extends ViewModelWidget<GalleryViewModel> {
         IconButton(
           icon: const Icon(Icons.favorite_border),
           onPressed: () async {
-            await Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (_) => const FavoritesView(),
-              ),
-            );
+            await AutoRouter.of(context).push(const FavoritesRoute());
             vm.notifyListeners();
           },
         ),
       ],
       body: vm.allPhotos.isEmpty
-          ? const PhotoGrid(
-              photos: ["", "", "", "", "", "", "", "", "", "", "", ""],
-              useShimmer: true,
-            )
+          // ? const PhotoGrid(
+          //     photos: ["", "", "", "", "", "", "", "", "", "", "", ""],
+          //     useShimmer: true,
+          //   )
+          ? PhotoGrid(photos: List.generate(12, (_) => null), useShimmer: true)
           : RefreshIndicator(
               onRefresh: () async {
                 vm.currentPage = 0;

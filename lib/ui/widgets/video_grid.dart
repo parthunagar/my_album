@@ -1,8 +1,10 @@
 // ignore: must_be_immutable
 import 'dart:typed_data';
 
+import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
+import 'package:monirth_memories/core/route/router.gr.dart';
 import 'package:monirth_memories/main.dart';
 import 'package:monirth_memories/ui/model/photo_model.dart';
 import 'package:monirth_memories/ui/widgets/shimmer_effect.dart';
@@ -53,15 +55,8 @@ class VideoGrid extends StatelessWidget {
               onTap: thumbData == null
                   ? null
                   : () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => PIPView(
-                            builder: (context, isFloating) =>
-                                MyPlayer(videoUrl: videoUrl),
-                          ),
-                        ),
-                      );
+                      AutoRouter.of(context)
+                          .push(MyPlayerRoute(videoUrl: videoUrl));
                     },
               child: AnimatedContainer(
                 duration: const Duration(milliseconds: 250),

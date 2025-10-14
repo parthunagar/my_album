@@ -3,27 +3,34 @@ import 'package:flutter/material.dart';
 // ignore: must_be_immutable
 class ParentView extends StatelessWidget {
   final Widget body;
-  String title;
+  String? title;
   List<Widget>? actions;
   bool? showLeading;
   Widget? bottomNavigationBar;
+  Color? backgroundColor;
+  bool showAppBar;
   ParentView({
     super.key,
-    required this.title,
+    this.title,
     required this.body,
     this.actions,
     this.showLeading,
     this.bottomNavigationBar,
+    this.backgroundColor,
+    this.showAppBar = true,
   });
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: _CustomAppBar(
-        title: title,
-        actions: actions,
-        showLeading: showLeading,
-      ),
+      backgroundColor: backgroundColor,
+      appBar: showAppBar
+          ? _CustomAppBar(
+              title: title ?? '',
+              actions: actions,
+              showLeading: showLeading,
+            )
+          : null,
       bottomNavigationBar: bottomNavigationBar,
       body: body,
     );

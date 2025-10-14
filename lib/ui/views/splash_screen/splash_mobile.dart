@@ -14,7 +14,6 @@ class _SplashScreenMobileState extends State<_SplashScreenMobile> {
     var w = MediaQuery.of(context).size.width;
     var h = MediaQuery.of(context).size.height;
     return ParentView(
-      title: '',
       body: FlameSplashScreen(
         controller: FlameSplashController(
           fadeInDuration: const Duration(milliseconds: 1),

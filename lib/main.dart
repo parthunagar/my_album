@@ -56,6 +56,7 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
               routeInformationParser:
                   appRouter.defaultRouteParser(includePrefixMatches: true),
               routerDelegate: appRouter.delegate(),
+              
             );
           },
         );

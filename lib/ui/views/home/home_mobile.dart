@@ -14,22 +14,16 @@ class _HomeMobile extends StatelessWidget {
     const jsonUrl =
         "https://raw.githubusercontent.com/parthunagar/my_album/images/assets/";
 
-    navigateTo(String json) => Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => GalleryView(
-              jsonUrl: "$jsonUrl$json.json",
-            ),
-          ),
-        );
-    navigateToVideo(String json) => Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => VideoListView(
-              "$jsonUrl$json.json",
-            ),
-          ),
-        );
+    navigateTo(String json) {
+      return AutoRouter.of(context)
+          .push(GalleryRoute(jsonUrl: "$jsonUrl$json.json"));
+    }
+
+    navigateToVideo(String json) {
+      return AutoRouter.of(context)
+          .push(VideoListRoute(jsonUrl: "$jsonUrl$json.json"));
+    }
+
     return ParentView(
       title: 'Home',
       showLeading: false,
@@ -49,6 +43,16 @@ class _HomeMobile extends StatelessWidget {
           mainAxisSize: MainAxisSize.max,
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
+            AlbumThumbnailCard(
+              title: "Dukhna",
+              imageUrl: "${imgUrl}dukhana/IMG_0838.JPG",
+              onTap: () => navigateTo("dukhna"),
+            ),
+            AlbumThumbnailCard(
+              title: "Kanku Pagla",
+              imageUrl: "${imgUrl}kanku_pagla/IMG_0461.JPG",
+              onTap: () => navigateTo("kanku_pagla"),
+            ),
             AlbumThumbnailCard(
               title: "Pre-Wedding Album",
               imageUrl: "${imgUrl}pre_wedding_album_pic/album/album1.jpg",
