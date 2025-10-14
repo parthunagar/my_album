@@ -14,6 +14,7 @@
 import 'package:auto_route/auto_route.dart' as _i8;
 import 'package:flutter/material.dart' as _i9;
 
+import '../../ui/model/photo_model.dart' as _i11;
 import '../../ui/views/favorites/favorites_view.dart' as _i3;
 import '../../ui/views/full_image/full_image_view.dart' as _i4;
 import '../../ui/views/gallery/gallery_view.dart' as _i5;
@@ -22,7 +23,6 @@ import '../../ui/views/splash_screen/splash_view.dart' as _i1;
 import '../../ui/views/video_list/video_list_view.dart' as _i6;
 import '../../ui/widgets/video_player.dart' as _i7;
 import '../auto_route_guards.dart' as _i10;
-import '../services/favorites_service.dart' as _i11;
 
 class AppRouter extends _i8.RootStackRouter {
   AppRouter({
@@ -58,10 +58,8 @@ class AppRouter extends _i8.RootStackRouter {
         routeData: routeData,
         child: _i4.FullImageView(
           key: args.key,
-          id: args.id,
-          fullImagePath: args.fullImagePath,
-          isAsset: args.isAsset,
-          favoritesService: args.favoritesService,
+          photos: args.photos,
+          initialIndex: args.initialIndex,
         ),
       );
     },
@@ -178,19 +176,15 @@ class FavoritesRoute extends _i8.PageRouteInfo<void> {
 class FullImageRoute extends _i8.PageRouteInfo<FullImageRouteArgs> {
   FullImageRoute({
     _i9.Key? key,
-    required int id,
-    required String fullImagePath,
-    required bool isAsset,
-    required _i11.PreferenceService favoritesService,
+    required List<_i11.PhotoModel> photos,
+    int initialIndex = 0,
   }) : super(
           FullImageRoute.name,
           path: '/full_image',
           args: FullImageRouteArgs(
             key: key,
-            id: id,
-            fullImagePath: fullImagePath,
-            isAsset: isAsset,
-            favoritesService: favoritesService,
+            photos: photos,
+            initialIndex: initialIndex,
           ),
         );
 
@@ -200,25 +194,19 @@ class FullImageRoute extends _i8.PageRouteInfo<FullImageRouteArgs> {
 class FullImageRouteArgs {
   const FullImageRouteArgs({
     this.key,
-    required this.id,
-    required this.fullImagePath,
-    required this.isAsset,
-    required this.favoritesService,
+    required this.photos,
+    this.initialIndex = 0,
   });
 
   final _i9.Key? key;
 
-  final int id;
+  final List<_i11.PhotoModel> photos;
 
-  final String fullImagePath;
-
-  final bool isAsset;
-
-  final _i11.PreferenceService favoritesService;
+  final int initialIndex;
 
   @override
   String toString() {
-    return 'FullImageRouteArgs{key: $key, id: $id, fullImagePath: $fullImagePath, isAsset: $isAsset, favoritesService: $favoritesService}';
+    return 'FullImageRouteArgs{key: $key, photos: $photos, initialIndex: $initialIndex}';
   }
 }
 

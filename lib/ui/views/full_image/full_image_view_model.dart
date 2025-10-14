@@ -1,65 +1,118 @@
+import 'package:cached_network_image/cached_network_image.dart';
+import 'package:gallery_saver_plus/gallery_saver.dart';
 import 'package:logger/logger.dart';
 import 'package:monirth_memories/core/logger.dart';
+import 'package:monirth_memories/core/services/favorites_service.dart';
+import 'package:monirth_memories/ui/model/photo_model.dart';
 import 'package:monirth_memories/utils/globals.dart';
+import 'package:photo_view/photo_view.dart';
 import 'package:stacked/stacked.dart';
-import 'dart:typed_data';
 import 'package:flutter/material.dart';
-import 'package:permission_handler/permission_handler.dart';
-import 'package:flutter/services.dart' show rootBundle;
+import 'package:flutter/services.dart' show SystemChrome, DeviceOrientation;
 
-class FullImageViewModel extends BaseViewModel {
+class FullImageViewModel extends BaseViewModel{
   BuildContext context;
-  bool isAsset;
-  String fullImagePath;
-  FullImageViewModel(this.context, this.isAsset, this.fullImagePath);
+  final List<PhotoModel> photos;
+  int initialIndex;
+  FullImageViewModel(this.context,
+      {required this.photos, this.initialIndex = 0});
 
   final Logger log = getLogger('FullImageViewModel');
+
+  late PageController pageController;
+  late ScrollController thumbController;
+  late AnimationController animController;
+  late Animation<double> anim;
+  // int currentIndex = 0;
+  double verticalDrag = 0, maxDrag = 300, rotation = 0;
+  final prefService = PreferenceService();
+
+  late List<PhotoViewController> controllers;
+  late List<PhotoViewScaleStateController> scaleControllers;
+
   Future<void> init() async {
-    log.i('fullImagePath : $fullImagePath');
-    _load();
+    controllers = List.generate(photos.length, (_) => PhotoViewController());
+    scaleControllers =
+        List.generate(photos.length, (_) => PhotoViewScaleStateController());
+
+    // currentIndex = initialIndex;
+    pageController = PageController(initialPage: initialIndex);
+    thumbController = ScrollController();
+
+    SystemChrome.setPreferredOrientations(DeviceOrientation.values);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      prefetchImages(initialIndex);
+      scrollThumb(initialIndex);
+    });
   }
 
-  Uint8List? imageData;
-  bool loading = true;
-
-  Future<void> _load() async {
-    loading = true;
-    notifyListeners();
-    try {
-      log.i('widget.isAsset : $isAsset');
-      if (isAsset) {
-        log.i('widget.fullImagePath : $fullImagePath');
-        final bytes = await rootBundle.load(fullImagePath);
-        imageData = bytes.buffer.asUint8List();
-      } else {
-        imageData = null;
+  void prefetchImages(int index) {
+    for (int i = index - 2; i <= index + 2; i++) {
+      if (i >= 0 && i < photos.length) {
+        precacheImage(
+          CachedNetworkImageProvider(photos[i].url,
+              maxWidth: 1080, maxHeight: 1080),
+          context,
+        );
       }
-    } catch (e) {
-      imageData = null;
-    }
-    loading = false;
-    notifyListeners();
-  }
-
-  Future<void> saveToGallery() async {
-    final status = await Permission.storage.request();
-    if (!status.isGranted) return;
-
-    try {
-      if (isAsset && imageData != null) {
-        // final result = await ImageGallerySaver.saveImage(_imageData!, quality: 90, name: 'img_${widget.id}');
-        _showSnack('Saved: \$result');
-      } else {
-        // For remote, provide URL to native saver which fetches it; here we fallback to letting user save via network image cache.
-        _showSnack(
-            'Saving remote images: not fully implemented. Consider downloading via provided URL.');
-      }
-    } catch (e) {
-      _showSnack('Save failed: \$e');
     }
   }
 
-  void _showSnack(String msg) {
-    snackBar(context, msg);
+  void scrollThumb(int index) {
+    final offset = (index * 68) - MediaQuery.of(context).size.width / 2 + 34;
+    thumbController.animateTo(
+      offset.clamp(
+        thumbController.position.minScrollExtent,
+        thumbController.position.maxScrollExtent,
+      ),
+      duration: const Duration(milliseconds: 300),
+      curve: Curves.easeInOut,
+    );
+  }
+
+  List<PhotoModel> get visibleThumbs {
+    final start = (initialIndex - 10).clamp(0, photos.length);
+    final end = (initialIndex + 10).clamp(0, photos.length);
+    return photos.sublist(start, end);
+  }
+
+  double get bgOpacity => (1 - (verticalDrag.abs() / maxDrag)).clamp(0.0, 1.0);
+
+  void animateBack() {
+    anim = Tween<double>(begin: verticalDrag, end: 0)
+        .animate(CurvedAnimation(parent: animController, curve: Curves.easeOut))
+      ..addListener(() {
+        verticalDrag = anim.value;
+        notifyListeners();
+      });
+    animController.forward(from: 0);
+  }
+
+  Future<void> saveImage(String url) async {
+    try {
+      await GallerySaver.saveImage(url);
+      snackBar(context, 'Saved!');
+    } catch (_) {
+      snackBar(context, 'Failed to save');
+    }
+  }
+
+  @override
+  void dispose() {
+    for (var c in controllers) {
+      c.dispose();
+    }
+    for (var s in scaleControllers) {
+      s.dispose();
+    }
+
+    pageController.dispose();
+    thumbController.dispose();
+    animController.dispose();
+    SystemChrome.setPreferredOrientations([
+      DeviceOrientation.portraitUp,
+      DeviceOrientation.portraitDown,
+    ]);
+    super.dispose();
   }
 }

@@ -110,17 +110,10 @@ class _ImageTileState extends State<_ImageTile> {
           PageRouteBuilder(
             opaque: false, // makes the previous screen visible
             pageBuilder: (context, animation, secondaryAnimation) =>
-                FullGalleryView(
+                FullImageView(
               photos: list,
               initialIndex: widget.i,
             ),
-            transitionsBuilder:
-                (context, animation, secondaryAnimation, child) {
-              return FadeTransition(
-                opacity: animation,
-                child: child,
-              );
-            },
           ),
         );
 
