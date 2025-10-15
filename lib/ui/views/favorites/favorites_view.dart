@@ -22,8 +22,6 @@ class FavoritesView extends StatelessWidget {
       builder: (context, model, child) {
         return ScreenTypeLayout.builder(
           mobile: (context) => const _FavoritesMobile(),
-          // desktop: (context) => _HomeDesktop(model),
-          // tablet: (context) => _HomeTablet(model),
         );
       },
     );

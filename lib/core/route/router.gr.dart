@@ -19,9 +19,9 @@ import '../../ui/views/favorites/favorites_view.dart' as _i3;
 import '../../ui/views/full_image/full_image_view.dart' as _i4;
 import '../../ui/views/gallery/gallery_view.dart' as _i5;
 import '../../ui/views/home/home_view.dart' as _i2;
+import '../../ui/views/my_player/my_player_view.dart' as _i7;
 import '../../ui/views/splash_screen/splash_view.dart' as _i1;
 import '../../ui/views/video_list/video_list_view.dart' as _i6;
-import '../../ui/widgets/video_player.dart' as _i7;
 import '../auto_route_guards.dart' as _i10;
 
 class AppRouter extends _i8.RootStackRouter {
@@ -87,7 +87,7 @@ class AppRouter extends _i8.RootStackRouter {
       final args = routeData.argsAs<MyPlayerRouteArgs>();
       return _i8.MaterialPageX<dynamic>(
         routeData: routeData,
-        child: _i7.MyPlayer(
+        child: _i7.MyPlayerView(
           key: args.key,
           videoUrl: args.videoUrl,
         ),
@@ -279,7 +279,7 @@ class VideoListRouteArgs {
 }
 
 /// generated route for
-/// [_i7.MyPlayer]
+/// [_i7.MyPlayerView]
 class MyPlayerRoute extends _i8.PageRouteInfo<MyPlayerRouteArgs> {
   MyPlayerRoute({
     _i9.Key? key,

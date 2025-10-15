@@ -20,8 +20,6 @@ void main() async {
   ]).then((value) => runApp(MyApp()));
 }
 
-ThemeMode themeMode = ThemeMode.light;
-
 class MyApp extends StatefulWidget {
   MyApp({Key? key}) : super(key: key);
   final appRouter = AppRouter(
@@ -56,7 +54,6 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
               routeInformationParser:
                   appRouter.defaultRouteParser(includePrefixMatches: true),
               routerDelegate: appRouter.delegate(),
-              
             );
           },
         );

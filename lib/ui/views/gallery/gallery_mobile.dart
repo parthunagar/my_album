@@ -6,7 +6,7 @@ class _GalleryMobile extends ViewModelWidget<GalleryViewModel> {
   @override
   Widget build(BuildContext context, GalleryViewModel vm) {
     return ParentView(
-      title: 'Gallery',
+      title: 'SnapScape', //'Gallery Flow',
       actions: [
         IconButton(
           icon: const Icon(Icons.favorite_border),
@@ -17,10 +17,6 @@ class _GalleryMobile extends ViewModelWidget<GalleryViewModel> {
         ),
       ],
       body: vm.allPhotos.isEmpty
-          // ? const PhotoGrid(
-          //     photos: ["", "", "", "", "", "", "", "", "", "", "", ""],
-          //     useShimmer: true,
-          //   )
           ? PhotoGrid(photos: List.generate(12, (_) => null), useShimmer: true)
           : RefreshIndicator(
               onRefresh: () async {

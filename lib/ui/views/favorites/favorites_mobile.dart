@@ -6,7 +6,7 @@ class _FavoritesMobile extends ViewModelWidget<FavoritesViewModel> {
   @override
   Widget build(BuildContext context, FavoritesViewModel vm) {
     return ParentView(
-      title: 'Favorites',
+      title: 'HeartVault',
       body: FutureBuilder<List<String>>(
         future: vm.favsFuture,
         builder: (context, snapshot) {

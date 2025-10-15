@@ -4,7 +4,6 @@ class SizeConfig {
   static late MediaQueryData _mediaQueryData;
   static late double screenWidth;
   static late double screenHeight;
-  //static late double defaultSize;
   static late Orientation orientation;
 
   static void init(BuildContext context) {

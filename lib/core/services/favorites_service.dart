@@ -39,13 +39,11 @@ class PreferenceService extends BaseViewModel {
     return list.contains(item);
   }
 
-  /// Save theme preference
   Future<void> saveTheme(bool isDark) async {
     _prefs ??= await SharedPreferences.getInstance();
     await _prefs!.setBool(_themeKey, isDark);
   }
 
-  /// Load saved theme preference
   Future<ThemeMode> getThemeMode() async {
     _prefs ??= await SharedPreferences.getInstance();
     final isDark = _prefs!.getBool(_themeKey) ?? false;

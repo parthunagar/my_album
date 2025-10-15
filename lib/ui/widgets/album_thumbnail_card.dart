@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
-import 'package:monirth_memories/main.dart';
+import 'package:monirth_memories/core/app.locator.dart';
+import 'package:monirth_memories/core/services/favorites_service.dart';
 import 'package:monirth_memories/ui/widgets/shimmer_effect.dart';
 
 class AlbumThumbnailCard extends StatefulWidget {
@@ -35,7 +36,8 @@ class _AlbumThumbnailCardState extends State<AlbumThumbnailCard>
   Widget build(BuildContext context) {
     final thumbUrl =
         'https://images.weserv.nl/?url=${Uri.encodeComponent(widget.imageUrl)}&fit=cover&w=600&h=400&mask=corners:${widget.borderRadius.toInt()}';
-    bool isDark = themeMode == ThemeMode.dark;
+    final model = locator<PreferenceService>();
+    bool isDark = model.isDark;
     return GestureDetector(
       onTapDown: (_) => setState(() => _isPressed = true),
       onTapUp: (_) => setState(() => _isPressed = false),
@@ -79,73 +81,36 @@ class _AlbumThumbnailCardState extends State<AlbumThumbnailCard>
                 ),
                 Container(
                   height: widget.height,
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  alignment: Alignment.bottomLeft,
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(widget.borderRadius),
                     gradient: LinearGradient(
                       begin: Alignment.bottomCenter,
                       end: Alignment.topCenter,
+                      transform: const GradientRotation(0.15),
                       colors: [
-                        Colors.black.withValues(alpha: 0.6),
+                        isDark
+                            ? Colors.white.withValues(alpha: 0.8)
+                            : Colors.black.withValues(alpha: 0.6),
+                        isDark
+                            ? Colors.white.withValues(alpha: 0.1)
+                            : Colors.black.withValues(alpha: 0.3),
                         Colors.transparent,
                       ],
-                      stops: const [0.0, 0.7],
+                      stops: const [0.0, 0.3, 1.0],
                     ),
                   ),
-                ),
-
-                // --- Favorite icon ---
-                /*
-                Positioned(
-                  top: 8,
-                  right: 8,
-                  child: GestureDetector(
-                    onTap: widget.onFavoriteTap,
-                    child: AnimatedSwitcher(
-                      duration: const Duration(milliseconds: 250),
-                      transitionBuilder: (child, anim) => ScaleTransition(scale: anim,child: child),
-                      child: Icon(
-                        widget.isFavorite ? Icons.favorite : Icons.favorite_border,
-                        key: ValueKey(widget.isFavorite),
-                        color: widget.isFavorite ? Colors.redAccent : Colors.white,
-                        size: 26,
-                      ),
+                  child: Text(
+                    widget.title,
+                    style: TextStyle(
+                      fontSize: 22,
+                      fontWeight: FontWeight.bold,
+                      color: isDark ? Colors.black : Colors.white,
                     ),
                   ),
-                ), */
-
-                Positioned(
-                  left: 0,
-                  right: 0,
-                  bottom: 0,
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 12,
-                      vertical: 8,
-                    ),
-                    decoration: BoxDecoration(
-                      color: isDark
-                          ? Colors.black.withValues(alpha: 0.25)
-                          : Colors.white.withValues(alpha: 0.25),
-                      borderRadius: BorderRadius.vertical(
-                        bottom: Radius.circular(widget.borderRadius),
-                      ),
-                    ),
-                    child: Text(
-                      widget.title,
-                      style: const TextStyle(
-                        fontSize: 16,
-                        color: Colors.white,
-                        fontWeight: FontWeight.w600,
-                        shadows: [
-                          Shadow(
-                            color: Colors.black54,
-                            blurRadius: 4,
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
+                )
               ],
             ),
             const SizedBox(height: 12),

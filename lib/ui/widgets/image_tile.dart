@@ -1,15 +1,12 @@
-import 'package:auto_route/auto_route.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
-import 'package:monirth_memories/core/route/router.gr.dart';
 import 'package:monirth_memories/core/services/favorites_service.dart';
 import 'package:monirth_memories/ui/gallary_app_demo/core/utils/app_string.dart';
 import 'package:monirth_memories/ui/model/photo_model.dart';
-import 'package:monirth_memories/ui/views/full_image/full_gallary_view.dart';
 import 'package:monirth_memories/ui/views/full_image/full_image_view.dart';
+import 'package:monirth_memories/ui/widgets/progress_bar.dart';
 import 'package:monirth_memories/ui/widgets/shimmer_effect.dart';
-// import 'package:monirth_memories/utils/globals.dart';
 
 class PhotoGrid extends StatelessWidget {
   final ScrollController? controller;
@@ -32,7 +29,6 @@ class PhotoGrid extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final totalCount = photos.length + (isLoading && useShimmer ? 6 : 0);
-
     return Scrollbar(
       controller: controller,
       thumbVisibility: true,
@@ -51,14 +47,60 @@ class PhotoGrid extends StatelessWidget {
           }
 
           final img = usePhotoObject ? (photos[i] as PhotoModel).url : null;
-          // final photoData = photos[i];
           final thumbnail = thumbnailUrl(img ?? '');
 
-          return _ImageTile(
-            i: i,
-            img: img ?? '',
-            thumbnail: thumbnail,
-            photoData: photos, // as List<PhotoModel>,
+          return GestureDetector(
+            onLongPress: () {
+              showGeneralDialog(
+                barrierDismissible: true,
+                barrierColor: Colors.black.withValues(alpha: 0.5),
+                barrierLabel: 'FullScreenImage',
+                context: context,
+                transitionBuilder: (context, anim1, anim2, child) {
+                  return FadeTransition(
+                    opacity: anim1,
+                    child: child,
+                  );
+                },
+                transitionDuration: const Duration(milliseconds: 300),
+                pageBuilder: (context, anim1, anim2) {
+                  return AlertDialog(
+                    backgroundColor: Colors.transparent,
+                    contentPadding: EdgeInsets.zero,
+                    actionsAlignment: MainAxisAlignment.center,
+                    alignment: Alignment.center,
+                    content: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        GestureDetector(
+                          onTap: () => Navigator.pop(context),
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(12),
+                            child: Hero(
+                              tag: 'photo_$i',
+                              child: CachedNetworkImage(
+                                imageUrl: img ?? '',
+                                fit: BoxFit.contain,
+                                placeholder: (c, s) =>
+                                    const SmoothImagePlaceholder(),
+                                errorWidget: (c, s, e) =>
+                                    const Icon(Icons.broken_image),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
+                },
+              );
+            },
+            child: _ImageTile(
+              i: i,
+              img: img ?? '',
+              thumbnail: thumbnail,
+              photoData: photos,
+            ),
           );
         },
       ),
@@ -89,26 +131,14 @@ class _ImageTileState extends State<_ImageTile> {
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: () async {
-        // precacheImage(CachedNetworkImageProvider(list[widget.i].url), context);
-        // for (int i = widget.i + 1; i < widget.i + 3 && i < list.length; i++) {
-        //   precacheImage(CachedNetworkImageProvider(list[i].url), context);
-        // }
         List<PhotoModel> list = widget.photoData as List<PhotoModel>;
         for (int j = widget.i; j < widget.i + 3 && j < list.length; j++) {
           precacheImage(CachedNetworkImageProvider(list[j].url), context);
         }
-        // Navigator.push(
-        //     context,
-        //     MaterialPageRoute(
-        //         builder: (context) => FullGalleryView(
-        //               photos: list,
-        //               initialIndex: widget.i,
-        //             )));
-
         Navigator.push(
           context,
           PageRouteBuilder(
-            opaque: false, // makes the previous screen visible
+            opaque: false,
             pageBuilder: (context, animation, secondaryAnimation) =>
                 FullImageView(
               photos: list,
@@ -116,48 +146,9 @@ class _ImageTileState extends State<_ImageTile> {
             ),
           ),
         );
-
-        ///
-        ///
-        ///
-        ///
-        // showGeneralDialog(
-        //   context: context,
-        //   barrierLabel: "Gallery",
-        //   barrierDismissible: true,
-        //   transitionDuration: const Duration(milliseconds: 300),
-        //   pageBuilder: (context, anim1, anim2) {
-        //     return FullGalleryView(
-        //       photos: list,
-        //       initialIndex: widget.i,
-        //     );
-        //   },
-        //   transitionBuilder: (context, anim1, anim2, child) {
-        //     return SlideTransition(
-        //       position: Tween<Offset>(
-        //         begin: const Offset(0, 1),
-        //         end: Offset.zero,
-        //       ).animate(anim1),
-        //       child: child,
-        //     );
-        //   },
-        // );
-        ///
-        ///
-        ///
-        ///
-        // await AutoRouter.of(context).push(FullImageRoute(
-        //   id: widget.i,
-        //   fullImagePath: widget.img,
-        //   isAsset: false,
-        //   favoritesService: fav,
-        // ));
         setState(() {});
       },
       child: Hero(
-        // tag:'photo_${widget.i}_${widget.img}',// 'photo_${widget.img}',
-        // tag: 'photo_${(widget.photoData as List<PhotoModel>)[widget.i].url}',
-        // tag: 'photo_${list[widget.i].url}',
         tag: 'photo_${widget.i}',
         child: ClipRRect(
           borderRadius: BorderRadius.circular(12),
@@ -211,18 +202,35 @@ class _ImageTileState extends State<_ImageTile> {
                         }
                         setState(() {});
                       },
-                      child: AnimatedSwitcher(
-                        duration: const Duration(milliseconds: 250),
-                        transitionBuilder: (child, anim) => ScaleTransition(
-                          scale: anim,
-                          child: child,
-                        ),
-                        child: Icon(
-                          isFav ? Icons.favorite : Icons.favorite_border,
-                          key: ValueKey(isFav),
-                          color: isFav ? Colors.redAccent : Colors.white,
-                          size: 22,
-                        ),
+                      child: TweenAnimationBuilder<double>(
+                        key: ValueKey(isFav),
+                        tween: Tween<double>(begin: 0.8, end: 1.0),
+                        duration: const Duration(milliseconds: 300),
+                        curve: Curves.elasticOut,
+                        builder: (context, scale, child) {
+                          return Transform.scale(
+                            scale: scale,
+                            child: Container(
+                              padding: const EdgeInsets.all(6),
+                              decoration: BoxDecoration(
+                                color: Colors.white.withValues(alpha: 0.25),
+                                shape: BoxShape.circle,
+                                boxShadow: const [
+                                  BoxShadow(
+                                    blurRadius: 20,
+                                    spreadRadius: 0.1,
+                                    offset: Offset(4, 5),
+                                  ),
+                                ],
+                              ),
+                              child: Icon(
+                                isFav ? Icons.favorite : Icons.favorite_border,
+                                color: Colors.redAccent,
+                                size: 22,
+                              ),
+                            ),
+                          );
+                        },
                       ),
                     );
                   },

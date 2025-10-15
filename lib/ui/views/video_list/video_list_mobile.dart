@@ -6,7 +6,7 @@ class _VideoListMobile extends ViewModelWidget<VideoListViewModel> {
   @override
   Widget build(BuildContext context, VideoListViewModel vm) {
     return ParentView(
-      title: "🎞️ Video Memories",
+      title: "VibeDeck",
       body: vm.isLoading && vm.visibleVideos.isEmpty
           ? VideoGrid(videos: List.generate(12, (_) => null), useShimmer: true)
           : RefreshIndicator(

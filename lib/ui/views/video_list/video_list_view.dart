@@ -22,8 +22,6 @@ class VideoListView extends StatelessWidget {
       builder: (context, model, child) {
         return ScreenTypeLayout.builder(
           mobile: (context) => const _VideoListMobile(),
-          // desktop: (context) => _HomeDesktop(model),
-          // tablet: (context) => _HomeTablet(model),
         );
       },
     );

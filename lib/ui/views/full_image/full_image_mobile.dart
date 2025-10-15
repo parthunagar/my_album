@@ -67,22 +67,25 @@ class _FullImageMobileState extends State<_FullImageMobile>
     return GestureDetector(
       onTap: () => vm.pageController.jumpToPage(vm.photos.indexOf(photo)),
       child: Container(
-        margin: const EdgeInsets.symmetric(horizontal: 4),
+        margin: const EdgeInsets.symmetric(horizontal: 4, vertical: 12),
         decoration: BoxDecoration(
           border: isSelected
               ? Border.all(
                   color: model.isDark ? Colors.white : Colors.black, width: 1.5)
               : null,
-          borderRadius: BorderRadius.circular(6),
+          borderRadius: BorderRadius.circular(6.5),
         ),
         child: ClipRRect(
           borderRadius: BorderRadius.circular(5),
           child: CachedNetworkImage(
               imageUrl: photo.url,
-              width: 55,
-              memCacheWidth: 120,
-              memCacheHeight: 120,
+              width: 40,
+              memCacheWidth: 50, 
+              memCacheHeight: 50,
+              cacheKey: photo.url,
               fit: BoxFit.fill,
+              maxHeightDiskCache: 50,
+              maxWidthDiskCache: 50,
               placeholder: (_, __) => ShimmerEffect()),
         ),
       ),
@@ -135,12 +138,11 @@ class _FullImageMobileState extends State<_FullImageMobile>
                 child: Row(
                   children: [
                     IconButton(
-                        icon: const Icon(Icons.download, color: Colors.white),
+                        icon: const Icon(Icons.download),
                         onPressed: () =>
                             vm.saveImage(vm.photos[vm.initialIndex].url)),
                     IconButton(
-                        icon:
-                            const Icon(Icons.rotate_right, color: Colors.white),
+                        icon: const Icon(Icons.rotate_right),
                         onPressed: () =>
                             setState(() => vm.rotation += 90 * 3.14159 / 180)),
                     FutureBuilder<bool>(
@@ -151,7 +153,7 @@ class _FullImageMobileState extends State<_FullImageMobile>
                         return IconButton(
                           icon: Icon(
                             isFav ? Icons.favorite : Icons.favorite_border,
-                            color: isFav ? Colors.redAccent : Colors.white,
+                            color: isFav ? Colors.redAccent : null,
                           ),
                           onPressed: () async {
                             final url = vm.photos[vm.initialIndex].url;
@@ -170,20 +172,22 @@ class _FullImageMobileState extends State<_FullImageMobile>
                 bottom: 16,
                 left: 0,
                 right: 0,
-                height: 60,
-                child: ListView.builder(
-                  controller: vm.thumbController,
-                  scrollDirection: Axis.horizontal,
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                  itemCount: vm.visibleThumbs.length,
-                  itemBuilder: (_, i) {
-                    final photo = vm.visibleThumbs[i];
-                    return buildThumb(
-                      photo,
-                      vm.photos.indexOf(photo) == vm.initialIndex,
-                      vm,
-                    );
-                  },
+                child: SizedBox(
+                  height: 65,
+                  child: ListView.builder(
+                    controller: vm.thumbController,
+                    scrollDirection: Axis.horizontal,
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    itemCount: vm.visibleThumbs.length,
+                    itemBuilder: (_, i) {
+                      final photo = vm.visibleThumbs[i];
+                      return buildThumb(
+                        photo,
+                        vm.photos.indexOf(photo) == vm.initialIndex,
+                        vm,
+                      );
+                    },
+                  ),
                 ),
               ),
             ],

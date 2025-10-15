@@ -1,310 +1,260 @@
+// ignore_for_file: unnecessary_null_comparison, use_build_context_synchronously
 
-// ignore_for_file: unnecessary_null_comparison
-
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:get_thumbnail_video/index.dart';
-import 'package:get_thumbnail_video/video_thumbnail.dart';
-import 'package:monirth_memories/ui/model/photo_model.dart';
+import 'package:monirth_memories/core/app.locator.dart';
+import 'package:monirth_memories/core/services/favorites_service.dart';
 import 'package:stacked/stacked.dart';
 import 'package:http/http.dart' as http;
 import 'dart:io';
-import 'package:path_provider/path_provider.dart';
+import 'package:monirth_memories/utils/globals.dart';
+import 'package:permission_handler/permission_handler.dart';
+import 'package:video_player/video_player.dart';
+import 'dart:async';
+import 'package:flutter/services.dart';
+import 'package:pip_view/pip_view.dart';
 
-class VideoListViewModel extends BaseViewModel {
-  final String jsonUrl;
-  VideoListViewModel(this.jsonUrl);
+class MyPlayerViewModel extends BaseViewModel {
+  final String videoUrl;
+  final BuildContext context;
+  MyPlayerViewModel(this.context, this.videoUrl);
 
-  List<PhotoModel> allVideos = [];
-  List<PhotoModel> visibleVideos = [];
+  late VideoPlayerController videoController;
+  final model = locator<PreferenceService>();
 
-  int currentPage = 0;
-  final int pageSize = 15;
-  bool isLoading = false;
-  bool allLoaded = false;
-  bool isGeneratingThumbnails = false;
+  bool showControls = true;
+  bool isFullscreen = false;
+  bool showSeekIcon = false;
+  bool isForward = true;
+  double volume = 1.0;
+  double brightness = 0.5;
+  double speed = 1.0;
+  Timer? hideTimer;
 
-  final ScrollController scrollController = ScrollController();
+  // gesture variables
+  double initialVerticalDragValue = 0.0;
+  double verticalDragStartY = 0.0;
+  bool showVolumeIndicator = false;
+  bool showBrightnessIndicator = false;
+
+  // Add these variables in your State class
+  bool isDownloading = false;
+  bool cancelDownload = false;
+  double downloadProgress = 0.0;
+  double downloadedMB = 0.0;
+  double totalMB = 0.0;
+  http.Client? httpClient;
+
+  // ✅ Stream for download progress
+  final StreamController<double> _progressController =
+      StreamController.broadcast();
+  Stream<double> get progressStream => _progressController.stream;
 
   Future<void> init() async {
-    await fetchVideos();
-    scrollController.addListener(() {
-      final maxScroll = scrollController.position.maxScrollExtent;
-      final current = scrollController.position.pixels;
-      if (current >= maxScroll - 300 && !isLoading && !allLoaded) {
-        loadMore();
-      }
-    });
+    initializePlayer(videoUrl);
   }
 
-  /// 🧠 Fetch videos
-  Future<void> fetchVideos() async {
-    try {
-      final response = await http.get(Uri.parse(jsonUrl));
-      if (response.statusCode == 200) {
-        final parsed = await compute(parsePhotos, response.body);
-        allVideos = parsed;
-
-        // ✅ Attach cached thumbnails if available
-        for (final video in allVideos) {
-          final cachedFile = await _getCachedThumbnailFile(video.url);
-          if (await cachedFile.exists()) {
-            final bytes = await cachedFile.readAsBytes();
-            video.thumbnailNotifier.value = bytes;
-          }
-        }
-
-        visibleVideos.clear();
-        currentPage = 0;
-        allLoaded = false;
-        notifyListeners();
-        loadMore();
-      } else {
-        debugPrint("❌ Error: ${response.statusCode} || ${response.body}");
-      }
-    } catch (e) {
-      debugPrint("❌ Error fetching videos: $e");
-    }
-  }
-
-  Future<void> loadMore() async {
-    if (isLoading || allLoaded) return;
-
-    isLoading = true;
+  Future<void> initializePlayer(String url) async {
+    videoController = VideoPlayerController.networkUrl(Uri.parse(url));
+    await videoController.initialize();
+    videoController.setVolume(volume);
+    videoController.setPlaybackSpeed(speed);
+    videoController.play();
     notifyListeners();
-
-    final start = currentPage * pageSize;
-    final end = (start + pageSize).clamp(0, allVideos.length);
-
-    if (start >= allVideos.length) {
-      allLoaded = true;
-      isLoading = false;
-      notifyListeners();
-      return;
-    }
-
-    final newVideos = allVideos.sublist(start, end);
-    visibleVideos.addAll(newVideos);
-    currentPage++;
-    isLoading = false;
-    notifyListeners();
-    debugPrint(
-        '🎞️ Loaded videos: ${visibleVideos.length}/${allVideos.length}');
-    _generateThumbnailsAsync(newVideos);
-  }
-
-  final List<PhotoModel> _thumbnailQueue = [];
-
-  /// ✅ Generates thumbnails once and caches locally
-  Future<void> _generateThumbnailsAsync(List<PhotoModel> videos) async {
-    _thumbnailQueue.addAll(videos);
-    if (isGeneratingThumbnails) return;
-
-    isGeneratingThumbnails = true;
-
-    try {
-      while (_thumbnailQueue.isNotEmpty) {
-        final batch = _thumbnailQueue.take(3).toList();
-        _thumbnailQueue.removeRange(0, batch.length);
-
-        await Future.wait(batch.map((video) async {
-          if (video.thumbnailNotifier.value != null) return;
-
-          final cachedFile = await _getCachedThumbnailFile(video.url);
-          if (await cachedFile.exists()) {
-            final bytes = await cachedFile.readAsBytes();
-            video.thumbnailNotifier.value = bytes;
-            return;
-          }
-
-          try {
-            final thumb = await VideoThumbnail.thumbnailData(
-              video: video.url,
-              imageFormat: ImageFormat.WEBP,
-              maxHeight: 100,
-              quality: 65,
-              timeMs: 650,
-            );
-
-            if (thumb != null) {
-              video.thumbnailNotifier.value = thumb;
-              await cachedFile.writeAsBytes(thumb, flush: true);
-            }
-          } catch (e) {
-            debugPrint('⚠️ Thumbnail generation failed for ${video.url}: $e');
-          }
-        }));
-
-        await Future.delayed(const Duration(milliseconds: 10));
-      }
-    } finally {
-      isGeneratingThumbnails = false;
-    }
-  }
-
-  /// 🗂️ Local cache path for each thumbnail
-  Future<File> _getCachedThumbnailFile(String videoUrl) async {
-    final dir = await getApplicationDocumentsDirectory();
-    final safeName = videoUrl.hashCode.toString();
-    final filePath = '${dir.path}/thumb_$safeName.webp';
-    return File(filePath);
+    startAutoHideControls();
   }
 
   @override
   void dispose() {
-    scrollController.dispose();
+    videoController.dispose();
+    hideTimer?.cancel();
+    _progressController.close();
     super.dispose();
   }
+
+  void togglePlayPause() {
+    if (videoController.value.isPlaying) {
+      videoController.pause();
+    } else {
+      videoController.play();
+    }
+    notifyListeners();
+    startAutoHideControls();
+  }
+
+  void seekBy(Duration offset, {required bool forward}) async {
+    final pos = await videoController.position ?? Duration.zero;
+    final duration = videoController.value.duration;
+    Duration target = pos + offset;
+    if (target < Duration.zero) target = Duration.zero;
+    if (target > duration) target = duration;
+    videoController.seekTo(target);
+
+    showSeekIcon = true;
+    isForward = forward;
+    notifyListeners();
+
+    Future.delayed(const Duration(milliseconds: 600), () {
+      showSeekIcon = false;
+      notifyListeners();
+    });
+  }
+
+  void toggleControls() {
+    showControls = !showControls;
+    notifyListeners();
+    if (showControls) startAutoHideControls();
+  }
+
+  void startAutoHideControls() {
+    hideTimer?.cancel();
+    hideTimer = Timer(const Duration(seconds: 3), () {
+      showControls = false;
+      notifyListeners();
+    });
+  }
+
+  void toggleFullScreen() {
+    if (isFullscreen) {
+      SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
+      SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
+    } else {
+      SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
+      SystemChrome.setPreferredOrientations([
+        DeviceOrientation.landscapeLeft,
+        DeviceOrientation.landscapeRight,
+      ]);
+    }
+    isFullscreen = !isFullscreen;
+    notifyListeners();
+  }
+
+  void enterPiP() {
+    final pip = PIPView.of(context);
+    pip?.presentBelow(const SizedBox());
+  }
+
+  void changeSpeed(double newSpeed) {
+    videoController.setPlaybackSpeed(newSpeed);
+    speed = newSpeed;
+    notifyListeners();
+  }
+
+  void setVolume(double value) {
+    videoController.setVolume(value);
+    volume = value;
+    notifyListeners();
+  }
+
+  void setBrightness(double value) {
+    brightness = value.clamp(0.0, 1.0);
+    notifyListeners();
+  }
+
+  String formatDuration(Duration duration) {
+    String twoDigits(int n) => n.toString().padLeft(2, '0');
+    final minutes = twoDigits(duration.inMinutes.remainder(60));
+    final seconds = twoDigits(duration.inSeconds.remainder(60));
+    return '${twoDigits(duration.inHours)}:$minutes:$seconds';
+  }
+
+  Future<void> downloadVideo() async {
+    try {
+      if (Platform.isAndroid) {
+        if (await Permission.manageExternalStorage.isDenied) {
+          await Permission.manageExternalStorage.request();
+        }
+        if (await Permission.storage.isDenied) {
+          await Permission.storage.request();
+        }
+        if (await Permission.manageExternalStorage.isDenied &&
+            await Permission.storage.isDenied) {
+          snackBar(context, 'Storage permission denied', showInTop: true);
+          return;
+        }
+      }
+
+      final downloadsDir = Directory('/storage/emulated/0/Download');
+      if (!await downloadsDir.exists()) {
+        await downloadsDir.create(recursive: true);
+      }
+
+      final fileName = videoUrl.split('/').last;
+      final filePath = '${downloadsDir.path}/$fileName';
+      final file = File(filePath);
+
+      httpClient = http.Client();
+      final request = http.Request('GET', Uri.parse(videoUrl));
+      final response = await httpClient!.send(request);
+
+      final total = response.contentLength ?? 0;
+      int received = 0;
+      final sink = file.openWrite();
+
+      isDownloading = true;
+      cancelDownload = false;
+      downloadedMB = 0;
+      totalMB = total / (1024 * 1024);
+      notifyListeners();
+
+      double lastProgress = 0.0;
+
+      late StreamSubscription<List<int>> subscription;
+      subscription = response.stream.listen(
+        (chunk) {
+          if (cancelDownload) {
+            subscription.cancel();
+            return;
+          }
+
+          received += chunk.length;
+          sink.add(chunk);
+
+          if (total > 0) {
+            final newProgress = received / total;
+            if ((newProgress - lastProgress).abs() >= 0.005) {
+              // ✅ Push progress to stream
+              downloadedMB = received / (1024 * 1024);
+              _progressController.add(newProgress);
+              lastProgress = newProgress;
+            }
+          }
+        },
+        onDone: () async {
+          await sink.close();
+
+          if (cancelDownload) {
+            snackBar(context, 'Download cancelled', showInTop: true);
+          } else {
+            snackBar(context, 'Downloaded to: $filePath', showInTop: true);
+          }
+
+          isDownloading = false;
+          _progressController.add(1.0);
+          notifyListeners();
+        },
+        onError: (e) async {
+          await sink.close();
+          isDownloading = false;
+          _progressController.addError(e);
+          notifyListeners();
+          snackBar(context, 'Download failed', showInTop: true);
+        },
+        cancelOnError: true,
+      );
+    } catch (e) {
+      isDownloading = false;
+      _progressController.addError(e);
+      notifyListeners();
+      snackBar(context, 'Download failed', showInTop: true);
+    }
+  }
+
+  void cancelDownloadNow() {
+    if (isDownloading) {
+      cancelDownload = true;
+      notifyListeners();
+      _progressController.addError('cancelled');
+      httpClient?.close();
+    }
+  }
 }
-
-// class VideoListViewModel extends BaseViewModel {
-//   final String jsonUrl;
-//   VideoListViewModel(this.jsonUrl);
-
-//   List<PhotoModel> allVideos = [];
-//   List<PhotoModel> visibleVideos = [];
-
-//   int currentPage = 0;
-//   final int pageSize = 15;
-//   bool isLoading = false;
-//   bool allLoaded = false;
-//   bool isGeneratingThumbnails = false;
-
-//   final ScrollController scrollController = ScrollController();
-
-//   Future<void> init() async {
-//     await fetchVideos();
-//     scrollController.addListener(() {
-//       final maxScroll = scrollController.position.maxScrollExtent;
-//       final current = scrollController.position.pixels;
-//       if (current >= maxScroll - 300 && !isLoading && !allLoaded) {
-//         loadMore();
-//       }
-//     });
-//   }
-
-//   /// 🧠 Fetch videos
-//   Future<void> fetchVideos() async {
-//     try {
-//       final response = await http.get(Uri.parse(jsonUrl));
-//       if (response.statusCode == 200) {
-//         final parsed = await compute(parsePhotos, response.body);
-//         allVideos = parsed;
-//         visibleVideos.clear();
-//         currentPage = 0;
-//         allLoaded = false;
-//         notifyListeners();
-//         loadMore();
-//       } else {
-//         debugPrint("❌ Error: ${response.statusCode} || ${response.body}");
-//       }
-//     } catch (e) {
-//       debugPrint("❌ Error fetching videos: $e");
-//     }
-//   }
-
-//   Future<void> loadMore() async {
-//     if (isLoading || allLoaded) return;
-
-//     isLoading = true;
-//     notifyListeners();
-
-//     final start = currentPage * pageSize;
-//     final end = (start + pageSize).clamp(0, allVideos.length);
-
-//     if (start >= allVideos.length) {
-//       allLoaded = true;
-//       isLoading = false;
-//       notifyListeners();
-//       return;
-//     }
-
-//     final newVideos = allVideos.sublist(start, end);
-//     visibleVideos.addAll(newVideos);
-//     currentPage++;
-//     isLoading = false;
-//     notifyListeners();
-//     debugPrint(
-//         '🎞️ Loaded videos: ${visibleVideos.length}/${allVideos.length}');
-//     _generateThumbnailsAsync(newVideos);
-//   }
-
-//   final List<PhotoModel> _thumbnailQueue = [];
-
-//   /*
-//   Future<void> _generateThumbnailsAsync(List<PhotoModel> videos) async {
-//     _thumbnailQueue.addAll(videos);
-//     if (isGeneratingThumbnails) return;
-//     isGeneratingThumbnails = true;
-//     try {
-//       while (_thumbnailQueue.isNotEmpty) {
-//         final video = _thumbnailQueue.removeAt(0);
-//         if (video.thumbnailNotifier.value != null) continue;
-//         try {
-//           final thumb = await VideoThumbnail.thumbnailData(
-//             video: video.url,
-//             imageFormat: ImageFormat.WEBP,
-//             maxHeight: 124,
-//             quality: 75,
-//             timeMs: 1000,
-//           );
-//           if (thumb != null) {
-//             video.thumbnailNotifier.value = thumb;
-//           }
-//         } catch (e) {
-//           debugPrint('⚠️ Thumbnail generation failed for ${video.url}: $e');
-//         }
-//         await Future.delayed(const Duration(milliseconds: 30));
-//       }
-//     } finally {
-//       isGeneratingThumbnails = false;
-//     }
-//   }
-//    */
-
-//   Future<void> _generateThumbnailsAsync(List<PhotoModel> videos) async {
-//     // Add new videos to queue
-//     _thumbnailQueue.addAll(videos);
-
-//     // Already generating? Just return; queue will handle it.
-//     if (isGeneratingThumbnails) return;
-
-//     isGeneratingThumbnails = true;
-
-//     try {
-//       while (_thumbnailQueue.isNotEmpty) {
-//         final batch = _thumbnailQueue.take(3).toList();
-//         _thumbnailQueue.removeRange(0, batch.length);
-//         await Future.wait(batch.map((video) async {
-//           if (video.thumbnailNotifier.value != null) return;
-
-//           try {
-//             final thumb = await VideoThumbnail.thumbnailData(
-//               video: video.url,
-//               imageFormat: ImageFormat.WEBP,
-//               maxHeight: 100,
-//               quality: 65,
-//               timeMs: 650,
-//             );
-
-//             if (thumb != null) {
-//               video.thumbnailNotifier.value = thumb;
-//             }
-//           } catch (e) {
-//             debugPrint('⚠️ Thumbnail generation failed for ${video.url}: $e');
-//           }
-//         }));
-//         await Future.delayed(const Duration(milliseconds: 5));
-//         // await Future.delayed(const Duration(milliseconds: 15));
-//       }
-//     } finally {
-//       isGeneratingThumbnails = false;
-//     }
-//   }
-
-//   @override
-//   void dispose() {
-//     scrollController.dispose();
-//     super.dispose();
-//   }
-// }

@@ -1,3 +1,5 @@
+// ignore_for_file: use_build_context_synchronously
+
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:gallery_saver_plus/gallery_saver.dart';
 import 'package:logger/logger.dart';
@@ -23,7 +25,7 @@ class FullImageViewModel extends BaseViewModel{
   late ScrollController thumbController;
   late AnimationController animController;
   late Animation<double> anim;
-  // int currentIndex = 0;
+
   double verticalDrag = 0, maxDrag = 300, rotation = 0;
   final prefService = PreferenceService();
 
@@ -35,7 +37,6 @@ class FullImageViewModel extends BaseViewModel{
     scaleControllers =
         List.generate(photos.length, (_) => PhotoViewScaleStateController());
 
-    // currentIndex = initialIndex;
     pageController = PageController(initialPage: initialIndex);
     thumbController = ScrollController();
 

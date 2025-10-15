@@ -4,12 +4,11 @@ import 'dart:typed_data';
 import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
+import 'package:monirth_memories/core/app.locator.dart';
 import 'package:monirth_memories/core/route/router.gr.dart';
-import 'package:monirth_memories/main.dart';
+import 'package:monirth_memories/core/services/favorites_service.dart';
 import 'package:monirth_memories/ui/model/photo_model.dart';
 import 'package:monirth_memories/ui/widgets/shimmer_effect.dart';
-import 'package:monirth_memories/ui/widgets/video_player.dart';
-import 'package:pip_view/pip_view.dart';
 
 class VideoGrid extends StatelessWidget {
   final ScrollController? controller;
@@ -31,7 +30,8 @@ class VideoGrid extends StatelessWidget {
   Widget build(BuildContext context) {
     final totalCount =
         videos.length + (isLoading == true && useShimmer ? 6 : 0);
-    bool isDark = themeMode == ThemeMode.dark;
+    final model = locator<PreferenceService>();
+    bool isDark = model.isDark;
     return MasonryGridView.builder(
       controller: controller,
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
@@ -62,7 +62,10 @@ class VideoGrid extends StatelessWidget {
                 duration: const Duration(milliseconds: 250),
                 curve: Curves.easeInOut,
                 decoration: BoxDecoration(
-                  border: Border.all(color: Colors.grey.shade800),
+                  border: Border.all(
+                      color: isDark
+                          ? Colors.white.withValues(alpha: 0.3)
+                          : Colors.black.withValues(alpha: 0.3)),
                   borderRadius: BorderRadius.circular(12),
                   boxShadow: [
                     BoxShadow(

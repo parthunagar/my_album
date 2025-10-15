@@ -2,9 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:monirth_memories/core/app.locator.dart';
 import 'package:stacked_services/stacked_services.dart';
 
-// ScaffoldFeatureController<SnackBar, SnackBarClosedReason>
-// Future<dynamic>
-void snackBar(BuildContext context, String msg) {
+void snackBar(BuildContext context, String msg, {bool showInTop = false}) {
   final service = locator<SnackbarService>();
   final isDark = Theme.of(context).brightness == Brightness.dark;
 
@@ -18,8 +16,7 @@ void snackBar(BuildContext context, String msg) {
       backgroundColor: Colors.white,
       textColor: Colors.black,
       borderRadius: 12,
-      snackPosition: SnackPosition.BOTTOM,
-      // messageTextAlign: TextAlign.center,
+      snackPosition: showInTop ? SnackPosition.TOP : SnackPosition.BOTTOM,
       margin: const EdgeInsets.all(16),
       titleColor: Colors.black87,
     ),
@@ -31,8 +28,7 @@ void snackBar(BuildContext context, String msg) {
       backgroundColor: Colors.grey[850]!,
       textColor: Colors.white,
       borderRadius: 12,
-      snackPosition: SnackPosition.BOTTOM,
-      // messageTextAlign: TextAlign.center,
+      snackPosition: showInTop ? SnackPosition.TOP : SnackPosition.BOTTOM,
       margin: const EdgeInsets.all(16),
       titleColor: Colors.white70,
     ),

@@ -1,4 +1,8 @@
+import 'package:animated_text_kit/animated_text_kit.dart';
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'package:monirth_memories/core/app.locator.dart';
+import 'package:monirth_memories/core/services/favorites_service.dart';
 
 // ignore: must_be_immutable
 class ParentView extends StatelessWidget {
@@ -51,10 +55,27 @@ class _CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
 
   @override
   Widget build(BuildContext context) {
+    final model = locator<PreferenceService>();
+    // print('title : $title');
+    // IconData icon = title == "Moments Hub"
+    //     ? FontAwesomeIcons.bookOpenReader
+    //     : title == "SnapScape" //"Gallery Flow"
+    //         ? FontAwesomeIcons.images
+    //         : title == "HeartVault"
+    //             ? FontAwesomeIcons.solidHeart
+    //             : FontAwesomeIcons.clapperboard;
     final appBarActions = actions != null && actions!.isNotEmpty
         ? [
             ...actions!,
             const Padding(padding: EdgeInsets.only(right: 16)),
+            // Switch(
+            //   value: model.isDark,
+            //   onChanged: (value) {
+            //     model.toggleTheme(value);
+            //     model.notifyListeners();
+            //     // viewModel.notifyListeners();
+            //   },
+            // ),
           ]
         : actions;
     return AppBar(
@@ -67,7 +88,33 @@ class _CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
               icon: const Icon(Icons.arrow_back_ios_rounded),
             )
           : const SizedBox.shrink(),
-      title: Text(title),
+      title: Row(
+        mainAxisSize: MainAxisSize.min,
+        mainAxisAlignment: MainAxisAlignment.center,
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          // if (title.isNotEmpty)
+          //   Padding(
+          //     padding: const EdgeInsets.only(right: 8),
+          //     child: FaIcon(icon, size: 22),
+          //   ),
+
+          DefaultTextStyle(
+            style: GoogleFonts.dancingScript(
+              fontSize: 30,
+              fontWeight: FontWeight.bold,
+              color: model.isDark ? Colors.white : Colors.black,
+            ),
+            textAlign: TextAlign.center,
+            child: AnimatedTextKit(
+              pause: const Duration(milliseconds: 2000),
+              repeatForever: true,
+              totalRepeatCount: 5,
+              animatedTexts: [TyperAnimatedText(title)],
+            ),
+          ),
+        ],
+      ),
       actions: appBarActions,
     );
   }
